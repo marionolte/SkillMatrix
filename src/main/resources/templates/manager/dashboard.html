@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(
+        'Manager Dashboard',
+        'Team-Ueberblick und Skill-Status',
+        'dashboard',
+        ~{::headExtra},
+        ~{::pageActions},
+        ~{::content},
+        ~{::scripts}
+      )}">
+<head>
+  <th:block th:fragment="headExtra"></th:block>
+</head>
+<body>
+
+<th:block th:fragment="pageActions">
+  <a th:href="@{/manager/export/excel}" class="btn btn--outline">&#8595; Excel Export</a>
+  <a th:href="@{/manager/matrix}" class="btn btn--primary">Skill Matrix &#8594;</a>
+</th:block>
+
+<th:block th:fragment="content">
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" th:text="${#lists.size(engineers)}">0</div>
+      <div class="stat-label">Engineers</div>
+    </div>
+    <div class="stat-card stat-card--blue">
+      <div class="stat-value" th:text="${#lists.size(skills)}">0</div>
+      <div class="stat-label">Skills erfasst</div>
+    </div>
+    <div class="stat-card stat-card--green">
+      <div class="stat-value" th:text="${#lists.size(allEngineers)}">0</div>
+      <div class="stat-label">Aktive Mitglieder</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header">
+      <h3 class="card-title">Team-Mitglieder</h3>
+      <a th:href="@{/manager/matrix}" class="btn btn--sm btn--outline">Vollstaendige Matrix &#8594;</a>
+    </div>
+    <div class="engineers-grid">
+      <a th:each="eng : ${allEngineers}"
+         th:href="@{/manager/engineers/{id}(id=${eng.id})}"
+         class="engineer-card">
+        <div class="eng-avatar" th:text="${#strings.substring(eng.fullName,0,1)}">M</div>
+        <div class="eng-info">
+          <div class="eng-name" th:text="${eng.fullName}">Name</div>
+          <div class="eng-team" th:text="${eng.team != null ? eng.team : (eng.department != null ? eng.department : '-')}">Team</div>
+        </div>
+        <span class="eng-arrow">&#8594;</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Skill-Matrix Vorschau</h3>
+      <a th:href="@{/manager/gaps}" class="btn btn--sm btn--primary">Gap Analyse starten &#8594;</a>
+    </div>
+    <div class="matrix-preview-scroll">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th class="matrix-th-skill">Skill</th>
+            <th th:each="eng : ${engineers}" class="matrix-th-eng"
+                th:text="${#strings.abbreviate(eng.fullName, 12)}">Eng</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="skill,iterStat : ${skills}" th:if="${iterStat.index &lt; 10}">
+            <td class="matrix-td-skill" th:text="${skill.name}">Skill</td>
+            <td th:each="eng : ${engineers}" class="matrix-td-level">
+              <th:block th:with="key=${eng.id + '_' + skill.id}">
+                <th:block th:with="lvl=${lookup[key]}">
+                  <span th:if="${lvl != null}" class="matrix-pill"
+                        th:classappend="'matrix-pill--' + ${lvl.name().toLowerCase()}"
+                        th:text="${lvl.label}">--</span>
+                  <span th:unless="${lvl != null}" class="matrix-empty">--</span>
+                </th:block>
+              </th:block>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div th:if="${#lists.size(skills) > 10}" class="matrix-more">
+      <a th:href="@{/manager/matrix}">+ <span th:text="${#lists.size(skills) - 10}">0</span> weitere Skills anzeigen</a>
+    </div>
+  </div>
+
+</th:block>
+
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

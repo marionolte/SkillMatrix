@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(
+        'Meine Skills',
+        'Skills und SubSkills verwalten',
+        'my-skills',
+        ~{::headExtra},
+        ~{::pageActions},
+        ~{::content},
+        ~{::scripts}
+      )}">
+<head><th:block th:fragment="headExtra"></th:block></head>
+<body>
+
+<th:block th:fragment="pageActions">
+  <a th:href="@{/engineer/skills/export}" class="btn btn--outline">&#8595; Excel Export</a>
+  <button class="btn btn--outline" onclick="openModal('importModal')">&#8679; Import</button>
+  <button class="btn btn--outline" onclick="openModal('addSubSkillModal')">+ SubSkill</button>
+  <button class="btn btn--primary" onclick="openModal('addSkillModal')">+ Skill</button>
+</th:block>
+
+<th:block th:fragment="content">
+
+  <!-- Teams Banner -->
+  <div th:unless="${myTeams.empty}" class="teams-banner">
+    <span class="teams-banner-label">Meine Teams:</span>
+    <span th:each="t : ${myTeams}" class="team-chip"
+          th:style="'border-color:' + ${t.color} + ';color:' + ${t.color}"
+          th:text="${t.name}">Team</span>
+  </div>
+
+  <!-- Import error list (flash) -->
+  <div th:if="${importErrors}" class="flash flash--error" style="margin-bottom:1rem">
+    <strong>Warnungen beim Import:</strong>
+    <ul style="margin:.4rem 0 0 1.2rem;font-size:.82rem">
+      <li th:each="err : ${importErrors}" th:text="${err}">Error</li>
+    </ul>
+  </div>
+
+  <!-- Import Modal -->
+  <div id="importModal" class="modal" style="display:none">
+    <div class="modal-backdrop" onclick="closeModal('importModal')"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>&#8679; Skills importieren</h3>
+        <button class="modal-close" onclick="closeModal('importModal')">&#10005;</button>
+      </div>
+      <div style="font-size:.85rem;color:var(--text-2);margin-bottom:1rem;line-height:1.7">
+        Lade eine Excel-Datei hoch, die das <strong>Import-Tabellenblatt</strong> enthält.
+        Du kannst deine aktuelle Skill-Liste als Vorlage exportieren
+        (&#8595; Excel Export → Tabellenblatt "Import" verwenden) und die Level-Spalte anpassen.
+        <br/><br/>
+        <strong>Hinweis:</strong> Nur bestehende Skills und SubSkills können importiert werden.
+        Neue Skills müssen vom Admin angelegt werden.
+      </div>
+      <form th:action="@{/engineer/skills/import}" method="post" enctype="multipart/form-data">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="form-group">
+          <label class="form-label">Excel-Datei (.xlsx) *</label>
+          <div class="file-drop-zone" style="padding:1.5rem">
+            <input type="file" name="file" accept=".xlsx,.xls" required
+                   onchange="document.getElementById('importFileName').textContent = this.files[0]?.name || ''"/>
+            <div class="file-drop-icon">&#8679;</div>
+            <div class="file-drop-text">Datei wählen oder hierher ziehen</div>
+            <div id="importFileName" style="margin-top:.4rem;font-size:.8rem;color:var(--accent);font-weight:600"></div>
+          </div>
+        </div>
+        <div style="padding:.55rem .75rem;background:var(--surface-2);border-radius:var(--radius);
+                    font-size:.8rem;color:var(--text-2);margin-bottom:1rem">
+          Gültige Level: <strong>EXPERT · READY · ASSOCIATE · GEPLANT</strong>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn--outline" onclick="closeModal('importModal')">Abbrechen</button>
+          <button type="submit" class="btn btn--primary">Import starten</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div th:if="${mySkills.empty and mySubSkills.empty}" class="empty-state">
+    <div class="empty-icon">&#9711;</div>
+    <h3>Noch keine Skills erfasst</h3>
+    <p>Füge deine ersten Skills hinzu.</p>
+    <button class="btn btn--primary" onclick="openModal('addSkillModal')">Jetzt starten</button>
+  </div>
+
+  <!-- Skills grouped by category -->
+  <div th:unless="${mySkills.empty}">
+    <div th:each="cat : ${categories}">
+      <div th:with="catSkills=${mySkills.?[skill.category != null and skill.category.id == __${cat.id}__]}">
+        <div th:if="${!catSkills.empty}" class="card" style="margin-bottom:1.25rem">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span th:text="${cat.icon}">&#128295;</span>
+              <span th:text="${cat.name}">Kategorie</span>
+              <span class="badge" th:text="${catSkills.size()}">0</span>
+            </h3>
+          </div>
+          <div th:each="es : ${catSkills}">
+            <!-- Skill row -->
+            <div class="skill-expand-row" th:with="skillSubs=${subSkillMap[es.skill.id]}">
+              <div class="skill-expand-left">
+                <button class="expand-btn" type="button"
+                        th:if="${skillSubs != null and !skillSubs.empty}"
+                        th:data-skill-id="${es.skill.id}"
+                        onclick="toggleSubSkills(this.dataset.skillId)">&#9654;</button>
+                <span th:if="${skillSubs == null or skillSubs.empty}" style="width:20px;display:inline-block"></span>
+                <span class="skill-name-cell" th:text="${es.skill.name}">Skill</span>
+              </div>
+              <div class="skill-expand-right">
+                <!-- Inline level change -->
+                <form th:action="@{/engineer/skills/save}" method="post" class="inline-form">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <input type="hidden" name="skillId" th:value="${es.skill.id}"/>
+                  <input type="hidden" name="notes" th:value="${es.notes}"/>
+                  <select name="level" class="level-select" onchange="this.form.submit()"
+                          th:classappend="'level-select--' + ${es.level.name().toLowerCase()}">
+                    <option th:each="lvl : ${levels}"
+                            th:value="${lvl.name()}"
+                            th:text="${lvl.label}"
+                            th:selected="${lvl == es.level}">Level</option>
+                  </select>
+                </form>
+                <form th:action="@{/engineer/skills/remove}" method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <input type="hidden" name="skillId" th:value="${es.skill.id}"/>
+                  <button type="submit" class="btn btn--xs btn--danger"
+                          onclick="return confirm('Skill entfernen?')">&#10005;</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- SubSkills panel -->
+            <div th:with="skillSubs=${subSkillMap[es.skill.id]}"
+                 th:if="${skillSubs != null and !skillSubs.empty}"
+                 th:id="'subskills-' + ${es.skill.id}"
+                 class="subskill-panel" style="display:none">
+              <div class="subskill-section-title" style="padding:.5rem 1rem .25rem 2.5rem">
+                SubSkills
+              </div>
+              <div th:each="ss : ${skillSubs}" class="subskill-entry-row"
+                   style="padding:.3rem 1rem .3rem 2.5rem">
+                <span class="subskill-name" th:text="${ss.name}">SubSkill</span>
+                <!-- Find matching EngineerSubSkill -->
+                <th:block th:with="myEss=${mySubSkills.?[subSkill.id == __${ss.id}__]}">
+                  <form th:action="@{/engineer/subskills/save}" method="post" class="inline-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" name="subSkillId" th:value="${ss.id}"/>
+                    <select name="level" class="level-select"
+                            onchange="this.form.submit()"
+                            th:classappend="${!myEss.empty} ? 'level-select--' + ${myEss[0].level.name().toLowerCase()} : ''">
+                      <option value="" th:selected="${myEss.empty}">— kein Level —</option>
+                      <option th:each="lvl : ${levels}"
+                              th:value="${lvl.name()}"
+                              th:text="${lvl.label}"
+                              th:selected="${!myEss.empty and myEss[0].level == lvl}">Level</option>
+                    </select>
+                  </form>
+                  <form th:unless="${myEss.empty}"
+                        th:action="@{/engineer/subskills/remove}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" name="subSkillId" th:value="${ss.id}"/>
+                    <button type="submit" class="btn btn--xs btn--danger">&#10005;</button>
+                  </form>
+                </th:block>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Skill Modal -->
+  <div id="addSkillModal" class="modal" style="display:none">
+    <div class="modal-backdrop" onclick="closeModal('addSkillModal')"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Skill hinzufügen</h3>
+        <button class="modal-close" onclick="closeModal('addSkillModal')">&#10005;</button>
+      </div>
+      <form th:action="@{/engineer/skills/save}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="form-group">
+          <label class="form-label">Kategorie filtern</label>
+          <select id="catFilter" class="form-select" onchange="filterSkills()">
+            <option value="">Alle Kategorien</option>
+            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Kat</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Skill *</label>
+          <select id="skillSelect" name="skillId" class="form-select" required>
+            <option value="">— Skill wählen —</option>
+            <option th:each="skill : ${allSkills}"
+                    th:value="${skill.id}"
+                    th:text="${skill.name}"
+                    th:data-cat="${skill.category?.id}">Skill</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Skill-Level *</label>
+          <div class="level-picker">
+            <label th:each="lvl : ${levels}" class="level-option">
+              <input type="radio" name="level" th:value="${lvl.name()}" required/>
+              <span class="level-pill" th:classappend="'level-pill--' + ${lvl.name().toLowerCase()}"
+                    th:text="${lvl.label}">Level</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notizen</label>
+          <textarea name="notes" class="form-input" rows="2" placeholder="Optional..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn--outline" onclick="closeModal('addSkillModal')">Abbrechen</button>
+          <button type="submit" class="btn btn--primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add SubSkill Modal -->
+  <div id="addSubSkillModal" class="modal" style="display:none">
+    <div class="modal-backdrop" onclick="closeModal('addSubSkillModal')"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>SubSkill Level setzen</h3>
+        <button class="modal-close" onclick="closeModal('addSubSkillModal')">&#10005;</button>
+      </div>
+      <form th:action="@{/engineer/subskills/save}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="form-group">
+          <label class="form-label">Skill filtern</label>
+          <select id="ssSkillFilter" class="form-select" onchange="filterSubSkills()">
+            <option value="">Alle Skills</option>
+            <option th:each="s : ${mySkills}"
+                    th:value="${s.skill.id}"
+                    th:text="${s.skill.name}">Skill</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">SubSkill *</label>
+          <select id="subSkillSelect" name="subSkillId" class="form-select" required>
+            <option value="">— SubSkill wählen —</option>
+            <th:block th:each="s : ${mySkills}"
+                      th:with="subs=${subSkillMap[s.skill.id]}">
+              <th:block th:if="${subs != null}" th:each="ss : ${subs}">
+                <option th:value="${ss.id}"
+                        th:text="${s.skill.name + ' → ' + ss.name}"
+                        th:data-skill="${s.skill.id}">SubSkill</option>
+              </th:block>
+            </th:block>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Level *</label>
+          <div class="level-picker">
+            <label th:each="lvl : ${levels}" class="level-option">
+              <input type="radio" name="level" th:value="${lvl.name()}" required/>
+              <span class="level-pill" th:classappend="'level-pill--' + ${lvl.name().toLowerCase()}"
+                    th:text="${lvl.label}">Level</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn--outline" onclick="closeModal('addSubSkillModal')">Abbrechen</button>
+          <button type="submit" class="btn btn--primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</th:block>
+
+<th:block th:fragment="scripts">
+<script>
+function filterSkills() {
+  const catId = document.getElementById('catFilter').value;
+  const select = document.getElementById('skillSelect');
+  Array.from(select.options).forEach(opt => {
+    if (!opt.value) return;
+    opt.style.display = (!catId || opt.dataset.cat == catId) ? '' : 'none';
+  });
+  select.value = '';
+}
+function filterSubSkills() {
+  const skillId = document.getElementById('ssSkillFilter').value;
+  const select = document.getElementById('subSkillSelect');
+  Array.from(select.options).forEach(opt => {
+    if (!opt.value) return;
+    opt.style.display = (!skillId || opt.dataset.skill == skillId) ? '' : 'none';
+  });
+  select.value = '';
+}
+function toggleSubSkills(skillId) {
+  const panel = document.getElementById('subskills-' + skillId);
+  const btn = document.querySelector('[data-skill-id="' + skillId + '"].expand-btn');
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    if(btn) btn.textContent = '▼';
+  } else {
+    panel.style.display = 'none';
+    if(btn) btn.textContent = '▶';
+  }
+}
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+</script>
+</th:block>
+</body>
+</html>

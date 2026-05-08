@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout(
+        ${team.name},
+        'Team-Details und Mitglieder',
+        'teams',
+        ~{::headExtra},
+        ~{::pageActions},
+        ~{::content},
+        ~{::scripts}
+      )}">
+<head><th:block th:fragment="headExtra"></th:block></head>
+<body>
+
+<th:block th:fragment="pageActions">
+  <a th:href="@{/teams}" class="btn btn--outline">&#8592; Teams</a>
+  <a sec:authorize="hasAnyRole('MANAGER','ADMIN')"
+     th:href="@{/teams/edit/{id}(id=${team.id})}" class="btn btn--outline">Bearbeiten</a>
+</th:block>
+
+<th:block th:fragment="content">
+
+  <!-- Team Header -->
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header" style="gap:1rem">
+      <div style="display:flex;align-items:center;gap:1rem;flex:1">
+        <div class="team-icon team-icon--lg"
+             th:style="'background:' + ${team.color} + '22;color:' + ${team.color}">◈</div>
+        <div>
+          <div style="font-size:1.1rem;font-weight:700" th:text="${team.name}">Team</div>
+          <div style="color:var(--text-2);font-size:.85rem" th:text="${team.description ?: ''}">Desc</div>
+          <div style="color:var(--text-2);font-size:.82rem;margin-top:.2rem"
+               th:if="${team.manager != null}">
+            Manager: <strong th:text="${team.manager.fullName}">—</strong>
+            &nbsp;·&nbsp; <span th:text="${team.manager.email ?: ''}">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="stats-mini">
+        <div class="stat-mini"><span th:text="${team.members.size()}">0</span><small>Mitglieder</small></div>
+        <div class="stat-mini">
+          <span th:text="${#lists.size(team.members.?[consultant == true])}">0</span>
+          <small>Consultants</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+
+    <!-- Current Members -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Aktuelle Mitglieder</h3>
+      </div>
+      <div th:if="${team.members.empty}" class="empty-state" style="padding:2rem">
+        <p>Noch keine Mitglieder</p>
+      </div>
+      <div th:unless="${team.members.empty}">
+        <div th:each="member : ${team.members}" class="member-row">
+          <div class="eng-avatar eng-avatar--sm"
+               th:text="${#strings.substring(member.fullName,0,1)}">M</div>
+          <div class="member-info">
+            <div class="member-name">
+              <span th:text="${member.fullName}">Name</span>
+              <span th:if="${member.consultant}" class="consultant-badge">Consultant</span>
+            </div>
+            <div class="member-meta">
+              <span th:text="${member.role.name()}">Role</span>
+              <span th:if="${member.team != null}">&nbsp;· <span th:text="${member.team}">Team</span></span>
+            </div>
+          </div>
+          <form sec:authorize="hasAnyRole('MANAGER','ADMIN')"
+                th:action="@{/teams/{id}/members/remove(id=${team.id})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input type="hidden" name="userId" th:value="${member.id}"/>
+            <button type="submit" class="btn btn--xs btn--danger"
+                    onclick="return confirm('Mitglied entfernen?')">×</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Members (Manager/Admin only) -->
+    <div class="card" sec:authorize="hasAnyRole('MANAGER','ADMIN')">
+      <div class="card-header">
+        <h3 class="card-title">Mitglieder verwalten</h3>
+      </div>
+      <form th:action="@{/teams/{id}/members/set(id=${team.id})}" method="post"
+            style="padding:1.25rem">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="form-group">
+          <label class="form-label">Mitglieder auswählen</label>
+          <div class="member-select-list">
+            <label th:each="eng : ${allEngineers}" class="check-label">
+              <input type="checkbox" name="userIds" th:value="${eng.id}"
+                     th:checked="${team.members.contains(eng)}"/>
+              <span class="member-select-name">
+                <span th:text="${eng.fullName}">Name</span>
+                <span th:if="${eng.consultant}" class="consultant-badge">Consultant</span>
+              </span>
+              <span class="member-select-meta" th:text="${eng.team ?: eng.role.name()}">Team</span>
+            </label>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+          <button type="submit" class="btn btn--primary">Mitglieder speichern</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+</th:block>
+
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

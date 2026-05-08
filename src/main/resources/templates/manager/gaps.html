@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('Gap Analyse','Skill-Luecken im Team identifizieren','gaps',~{},~{::pageActions},~{::content},~{::scripts})}">
+<head><th:block th:fragment="headExtra"></th:block></head>
+<body>
+
+<th:block th:fragment="pageActions">
+  <a th:href="@{/manager/export/excel}" class="btn btn--outline">↓ Excel Export</a>
+</th:block>
+
+<th:block th:fragment="content">
+
+  <!-- Filter Form -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Filter: Benötigte Skills</h3>
+    </div>
+    <form th:action="@{/manager/gaps}" method="get">
+      <div class="gap-filter-grid">
+        <div th:each="cat : ${categories}" th:with="catSkills=${allSkills.?[category != null and category.id == __${cat.id}__]}" class="gap-filter-category">
+          <div class="gap-cat-header">
+            <span th:text="${cat.icon}">🔧</span>
+            <span th:text="${cat.name}">Kat</span>
+          </div>
+          <div class="gap-skill-checks">
+            <label th:each="skill : ${catSkills}" class="check-label">
+              <input type="checkbox" name="skillIds" th:value="${skill.id}"
+                     th:checked="${selectedSkillIds.contains(skill.id)}"/>
+              <span th:text="${skill.name}">Skill</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="gap-controls">
+        <div class="form-group" style="margin:0;flex:0 0 auto">
+          <label class="form-label">Mindest-Level</label>
+          <select name="minLevel" class="form-select">
+            <option th:each="lvl : ${levels}"
+                    th:value="${lvl.name()}"
+                    th:text="${lvl.label}"
+                    th:selected="${lvl.name() == selectedMinLevel}">Level</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn--primary">Analyse starten</button>
+        <a th:href="@{/manager/gaps}" class="btn btn--outline">Zurücksetzen</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results -->
+  <div th:if="${gapData != null}">
+    <div class="card-header" style="margin-bottom:.75rem;padding:0">
+      <h3 class="card-title">
+        Ergebnis für
+        <th:block th:each="s,i : ${selectedSkills}">
+          <span class="skill-tag" th:text="${s.name}">Skill</span>
+        </th:block>
+        — Mindest-Level: <span th:text="${selectedMinLevel}">READY</span>
+      </h3>
+    </div>
+
+    <div class="gap-results">
+      <div th:each="row : ${gapData}" class="gap-engineer-card"
+           th:classappend="${row.coverage == 100} ? 'gap-card--full' : (${row.coverage >= 50} ? 'gap-card--partial' : 'gap-card--critical')">
+        <div class="gap-eng-header">
+          <div class="gap-eng-info">
+            <div class="eng-avatar eng-avatar--sm"
+                 th:text="${#strings.substring(row.engineer.fullName,0,1)}">M</div>
+            <div>
+              <div class="eng-name" th:text="${row.engineer.fullName}">Name</div>
+              <div class="eng-team" th:text="${row.engineer.team ?: '—'}">Team</div>
+            </div>
+          </div>
+          <div class="gap-coverage">
+            <span class="coverage-pct" th:text="${row.coverage} + '%'">100%</span>
+            <span class="coverage-label" th:text="${row.covered} + '/' + ${row.total} + ' Skills'">0/0</span>
+          </div>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-bar-fill"
+               th:style="'width:' + ${row.coverage} + '%'"
+               th:classappend="${row.coverage == 100} ? 'fill--green' : (${row.coverage >= 50} ? 'fill--amber' : 'fill--red')">
+          </div>
+        </div>
+        <div th:if="${!row.gaps.empty}" class="gap-missing">
+          <span class="gap-missing-label">Fehlende Skills:</span>
+          <span th:each="gapSkillId : ${row.gaps}">
+            <span th:each="skill : ${selectedSkills}"
+                  th:if="${skill.id == gapSkillId}"
+                  class="skill-tag skill-tag--missing" th:text="${skill.name}">Skill</span>
+          </span>
+        </div>
+        <div th:if="${row.gaps.empty}" class="gap-complete">
+          ✓ Alle geforderten Skills vorhanden
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:unless="${gapData != null}" class="empty-state">
+    <div class="empty-icon">△</div>
+    <h3>Gap Analyse</h3>
+    <p>Wähle benötigte Skills und das Mindest-Level, um Lücken im Team zu identifizieren.</p>
+  </div>
+
+</th:block>
+<th:block th:fragment="scripts"></th:block>
+</html>

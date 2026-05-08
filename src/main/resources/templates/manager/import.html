@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(
+        'Excel Import',
+        'Skills und Level aus Excel importieren',
+        'import',
+        ~{::headExtra},
+        ~{::pageActions},
+        ~{::content},
+        ~{}
+      )}">
+<head><th:block th:fragment="headExtra"></th:block></head>
+<body>
+
+<th:block th:fragment="pageActions">
+  <a th:href="@{/import/template}" class="btn btn--outline">&#8595; Vorlage herunterladen</a>
+</th:block>
+
+<th:block th:fragment="content">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+
+    <!-- Upload Form -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">&#8679; Excel-Datei importieren</h3>
+      </div>
+      <div style="padding:1.5rem">
+
+        <div th:if="${importErrors}" class="flash flash--error" style="margin-bottom:1rem">
+          <strong>Warnungen beim Import:</strong>
+          <ul style="margin:.5rem 0 0 1rem;font-size:.82rem">
+            <li th:each="err : ${importErrors}" th:text="${err}">Error</li>
+          </ul>
+        </div>
+
+        <form th:action="@{/import/upload}" method="post" enctype="multipart/form-data">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <div class="form-group">
+            <label class="form-label">Excel-Datei (.xlsx) *</label>
+            <div class="file-drop-zone" id="dropZone">
+              <input type="file" name="file" id="fileInput" accept=".xlsx,.xls"
+                     required onchange="updateFilename(this)"/>
+              <div class="file-drop-content" id="dropContent">
+                <div class="file-drop-icon">&#8679;</div>
+                <div class="file-drop-text">Datei hierher ziehen oder klicken</div>
+                <div class="file-drop-hint">.xlsx Dateien, max. 10 MB</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:.5rem">
+            <button type="submit" class="btn btn--primary">Import starten</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Anleitung</h3>
+      </div>
+      <div style="padding:1.25rem;font-size:.875rem;line-height:1.7;color:var(--text-2)">
+        <p style="margin-bottom:.75rem">
+          <strong style="color:var(--text)">Tabellenblatt-Name:</strong> <code>Import</code>
+        </p>
+        <table class="skill-table" style="font-size:.8rem">
+          <thead>
+            <tr>
+              <th>Spalte</th><th>Inhalt</th><th>Pflicht</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>A</td><td>Kategorie-Name</td><td>—</td></tr>
+            <tr><td>B</td><td>Skill-Name</td><td>✓</td></tr>
+            <tr><td>C</td><td>SubSkill-Name (leer = Haupt-Skill)</td><td>—</td></tr>
+            <tr><td>D</td><td>Beschreibung</td><td>—</td></tr>
+            <tr><td>E+</td><td>Benutzername als Header, Level als Wert</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:1rem">
+          <strong style="color:var(--text)">Gültige Level-Werte:</strong>
+          <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">
+            <span class="level-badge level-badge--expert">EXPERT</span>
+            <span class="level-badge level-badge--ready">READY</span>
+            <span class="level-badge level-badge--associate">ASSOCIATE</span>
+            <span class="level-badge level-badge--geplant">GEPLANT</span>
+          </div>
+        </div>
+        <p style="margin-top:1rem;color:var(--text-3);font-size:.8rem">
+          Bestehende Einträge werden aktualisiert, neue angelegt.
+          Kategorien und Skills werden automatisch erstellt falls nicht vorhanden.
+        </p>
+        <div style="margin-top:1rem">
+          <a th:href="@{/import/template}" class="btn btn--outline btn--sm">
+            &#8595; Vorlage mit aktuellen Engineers herunterladen
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Engineers Overview -->
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-header">
+      <h3 class="card-title">Aktive Engineers (Spaltennamen für Import)</h3>
+    </div>
+    <div style="padding:.75rem 1.25rem;display:flex;flex-wrap:wrap;gap:.5rem">
+      <span th:each="eng : ${engineers}" class="import-eng-chip">
+        <code th:text="${eng.username}">username</code>
+        <span th:text="'= ' + ${eng.fullName}" style="color:var(--text-2);font-size:.78rem">Name</span>
+        <span th:if="${eng.consultant}" class="consultant-badge" style="font-size:.68rem">C</span>
+      </span>
+    </div>
+  </div>
+
+</th:block>
+</body>
+</html>

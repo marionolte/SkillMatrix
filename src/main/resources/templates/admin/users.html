@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('Benutzerverwaltung','Alle Benutzer verwalten','users',~{},~{::pageActions},~{::content},~{::scripts})}">
+<head><th:block th:fragment="headExtra"></th:block></head>
+<body>
+
+<th:block th:fragment="pageActions">
+  <button class="btn btn--primary" onclick="openModal('newUserModal')">+ Neuer Benutzer</button>
+</th:block>
+
+<th:block th:fragment="content">
+  <div class="card">
+    <div class="skill-table-wrapper">
+      <table class="skill-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Benutzername</th>
+            <th>E-Mail</th>
+            <th>Rolle</th>
+            <th>Team</th>
+            <th>Status</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="u : ${users}">
+            <td class="skill-name-cell" th:text="${u.fullName}">Name</td>
+            <td style="font-family:var(--font-mono);font-size:.82rem" th:text="${u.username}">user</td>
+            <td style="font-size:.82rem" th:text="${u.email ?: '—'}">email</td>
+            <td>
+              <span class="role-badge"
+                    th:classappend="${u.role.name().toLowerCase()}"
+                    th:text="${u.role.name()}">ROLE</span>
+            </td>
+            <td th:text="${u.team ?: u.department ?: '—'}">Team</td>
+            <td>
+              <span th:if="${u.active}" class="status-badge status-badge--active">Aktiv</span>
+              <span th:unless="${u.active}" class="status-badge status-badge--inactive">Inaktiv</span>
+            </td>
+            <td>
+              <form th:action="@{/admin/users/toggle/{id}(id=${u.id})}" method="post" style="display:inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn--xs"
+                        th:classappend="${u.active} ? 'btn--danger' : 'btn--outline'"
+                        onclick="return confirm('Status ändern?')"
+                        th:text="${u.active} ? 'Deaktivieren' : 'Aktivieren'">Toggle</button>
+              </form>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- New User Modal -->
+  <div id="newUserModal" class="modal" style="display:none">
+    <div class="modal-backdrop" onclick="closeModal('newUserModal')"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Neuen Benutzer anlegen</h3>
+        <button class="modal-close" onclick="closeModal('newUserModal')">×</button>
+      </div>
+      <form th:action="@{/admin/users/save}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Benutzername *</label>
+            <input name="username" type="text" class="form-input" required placeholder="vorname.nachname"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Passwort *</label>
+            <input name="password" type="password" class="form-input" required placeholder="••••••••"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Vollständiger Name *</label>
+            <input name="fullName" type="text" class="form-input" required placeholder="Vorname Nachname"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">E-Mail</label>
+            <input name="email" type="email" class="form-input" placeholder="email@company.com"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Rolle *</label>
+            <select name="role" class="form-select" required>
+              <option th:each="r : ${roles}" th:value="${r.name()}" th:text="${r.name()}">Role</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Team</label>
+            <input name="team" type="text" class="form-input" placeholder="Backend / Frontend / DevOps"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Abteilung</label>
+          <input name="department" type="text" class="form-input" placeholder="Engineering"/>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn--outline" onclick="closeModal('newUserModal')">Abbrechen</button>
+          <button type="submit" class="btn btn--primary">Anlegen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</th:block>
+<th:block th:fragment="scripts">
+<script>
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+</script>
+</th:block>
+</html>

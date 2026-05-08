@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('Mein Profil','Persoenliche Daten und Passwort verwalten','profile',~{},~{::pageActions},~{::content},~{::scripts})}">
+<head><th:block th:fragment="headExtra"></th:block></head>
+<body>
+
+<th:block th:fragment="pageActions">
+  <a th:href="@{/engineer/skills}" class="btn btn--outline">← Meine Skills</a>
+</th:block>
+
+<th:block th:fragment="scripts">
+<script>
+function checkPw() {
+  const np = document.getElementById('newPw').value;
+  const cp = document.getElementById('confirmPw').value;
+  const el = document.getElementById('pwMatch');
+  if (!cp) { el.textContent = ''; return; }
+  if (np === cp) {
+    el.textContent = '✓ Passwörter stimmen überein';
+    el.style.color = 'var(--green)';
+  } else {
+    el.textContent = '✗ Passwörter stimmen nicht überein';
+    el.style.color = 'var(--red)';
+  }
+}
+</script>
+</th:block>
+
+<th:block th:fragment="content">
+
+  <div class="profile-grid">
+
+    <!-- ── Profil-Daten ──────────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span>◎</span> Persönliche Daten
+        </h3>
+      </div>
+
+      <!-- Flash -->
+      <div th:if="${success}" class="flash flash--success" style="margin:1rem 1.25rem 0"
+           th:text="${success}"></div>
+
+      <form th:action="@{/profile/save}" method="post" style="padding:1.25rem">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <!-- Avatar preview -->
+        <div class="profile-avatar-row">
+          <div class="profile-avatar" th:text="${#strings.substring(user.fullName,0,1)}">M</div>
+          <div>
+            <div class="profile-username" th:text="'@' + ${user.username}">@user</div>
+            <span class="role-badge"
+                  th:classappend="${user.role.name().toLowerCase()}"
+                  th:text="${user.role.name()}">ROLE</span>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:1.25rem">
+          <div class="form-group">
+            <label class="form-label">Vollständiger Name *</label>
+            <input name="fullName" type="text" class="form-input" required
+                   th:value="${user.fullName}" placeholder="Vorname Nachname"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">E-Mail</label>
+            <input name="email" type="email" class="form-input"
+                   th:value="${user.email}" placeholder="email@company.com"/>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Team</label>
+            <input name="team" type="text" class="form-input"
+                   th:value="${user.team}" placeholder="z.B. Backend, Frontend, DevOps"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Abteilung</label>
+            <input name="department" type="text" class="form-input"
+                   th:value="${user.department}" placeholder="z.B. Engineering"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Benutzername</label>
+          <input type="text" class="form-input" th:value="${user.username}"
+                 disabled style="opacity:.5;cursor:not-allowed"/>
+          <span style="font-size:.75rem;color:var(--text-3);margin-top:.3rem;display:block">
+            Benutzername kann nicht geändert werden.
+          </span>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary">Profil speichern</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ── Passwort ändern ───────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span>🔒</span> Passwort ändern
+        </h3>
+      </div>
+
+      <div th:if="${pwError}"   class="flash flash--error"   style="margin:1rem 1.25rem 0" th:text="${pwError}"></div>
+      <div th:if="${pwSuccess}" class="flash flash--success" style="margin:1rem 1.25rem 0" th:text="${pwSuccess}"></div>
+
+      <form th:action="@{/profile/password}" method="post" style="padding:1.25rem">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <div class="form-group">
+          <label class="form-label">Aktuelles Passwort *</label>
+          <input name="currentPassword" type="password" class="form-input" required
+                 placeholder="••••••••" autocomplete="current-password"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Neues Passwort *</label>
+          <input name="newPassword" type="password" class="form-input" required
+                 placeholder="Mindestens 6 Zeichen" autocomplete="new-password"
+                 id="newPw" oninput="checkPw()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Passwort bestätigen *</label>
+          <input name="confirmPassword" type="password" class="form-input" required
+                 placeholder="••••••••" autocomplete="new-password"
+                 id="confirmPw" oninput="checkPw()"/>
+          <span id="pwMatch" style="font-size:.75rem;margin-top:.3rem;display:block"></span>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary">Passwort ändern</button>
+        </div>
+      </form>
+
+      <!-- Account Info -->
+      <div style="padding:0 1.25rem 1.25rem">
+        <div class="profile-info-box">
+          <div class="profile-info-row">
+            <span class="info-label">Mitglied seit</span>
+            <span class="info-val"
+                  th:text="${#temporals.format(user.createdAt,'dd.MM.yyyy')}">—</span>
+          </div>
+          <div class="profile-info-row">
+            <span class="info-label">Status</span>
+            <span th:if="${user.active}"   class="status-badge status-badge--active">Aktiv</span>
+            <span th:unless="${user.active}" class="status-badge status-badge--inactive">Inaktiv</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /profile-grid -->
+
+</th:block>
+</html>

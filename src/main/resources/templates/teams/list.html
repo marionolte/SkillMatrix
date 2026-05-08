@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout(
+        'Service Teams',
+        'Team-Übersicht und Mitgliederverwaltung',
+        'teams',
+        ~{::headExtra},
+        ~{::pageActions},
+        ~{::content},
+        ~{}
+      )}">
+<head><th:block th:fragment="headExtra"></th:block></head>
+<body>
+
+<th:block th:fragment="pageActions">
+  <a sec:authorize="hasAnyRole('MANAGER','ADMIN')"
+     th:href="@{/teams/new}" class="btn btn--primary">+ Neues Team</a>
+</th:block>
+
+<th:block th:fragment="content">
+
+  <div th:if="${teams.empty}" class="empty-state">
+    <div class="empty-icon">◈</div>
+    <h3>Keine Teams vorhanden</h3>
+    <p th:if="${isManagerOrAdmin}">Lege das erste Service-Team an.</p>
+    <p th:unless="${isManagerOrAdmin}">Du bist noch keinem Team zugewiesen.</p>
+  </div>
+
+  <div class="teams-grid" th:unless="${teams.empty}">
+    <div th:each="team : ${teams}" class="team-card">
+      <div class="team-card-accent" th:style="'background:' + ${team.color}"></div>
+      <div class="team-card-body">
+        <div class="team-card-header">
+          <div class="team-icon" th:style="'background:' + ${team.color} + '22;color:' + ${team.color}">◈</div>
+          <div class="team-info">
+            <h3 class="team-name" th:text="${team.name}">Team</h3>
+            <div class="team-manager" th:if="${team.manager != null}">
+              Manager: <span th:text="${team.manager.fullName}">—</span>
+            </div>
+            <div class="team-manager" th:unless="${team.manager != null}" style="color:var(--text-3)">
+              Kein Manager zugewiesen
+            </div>
+          </div>
+          <div class="team-member-count">
+            <span th:text="${team.members.size()}">0</span>
+            <small>Mitglieder</small>
+          </div>
+        </div>
+
+        <p class="team-desc" th:text="${team.description ?: ''}">Beschreibung</p>
+
+        <div class="team-members-preview" th:unless="${team.members.empty}">
+          <span th:each="m,i : ${team.members}" th:if="${i.index &lt; 5}"
+                class="member-chip"
+                th:classappend="${m.consultant} ? 'member-chip--consultant'"
+                th:title="${m.fullName + (m.consultant ? ' (Consultant)' : '')}">
+            <span th:text="${#strings.substring(m.fullName,0,1)}">M</span>
+          </span>
+          <span th:if="${team.members.size() > 5}" class="member-chip member-chip--more"
+                th:text="'+' + ${team.members.size() - 5}">+0</span>
+        </div>
+        <div th:if="${team.members.empty}" style="font-size:.8rem;color:var(--text-3);padding:.5rem 0">
+          Noch keine Mitglieder
+        </div>
+
+        <div class="team-card-footer">
+          <a th:href="@{/teams/{id}(id=${team.id})}" class="btn btn--sm btn--outline">Details →</a>
+          <div sec:authorize="hasAnyRole('MANAGER','ADMIN')" style="display:flex;gap:.4rem">
+            <a th:href="@{/teams/edit/{id}(id=${team.id})}" class="btn btn--sm btn--outline">Bearbeiten</a>
+            <form th:action="@{/teams/{id}/toggle(id=${team.id})}" method="post" style="display:inline">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button type="submit" class="btn btn--sm btn--danger"
+                      onclick="return confirm('Status ändern?')"
+                      th:text="${team.active} ? 'Deaktivieren' : 'Aktivieren'">Toggle</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</th:block>
+</body>
+</html>

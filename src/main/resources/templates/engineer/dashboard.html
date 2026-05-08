@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('Dashboard','Dein persoenlicher Skill-Ueberblick','dashboard',~{},~{::pageActions},~{::content},~{})}">
+<head><th:block th:fragment="headExtra"></th:block></head>
+<body>
+
+<th:block th:fragment="pageActions"></th:block>
+<th:block th:fragment="content">
+
+  <!-- Stats row -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" th:text="${mySkills.size()}">0</div>
+      <div class="stat-label">Erfasste Skills</div>
+    </div>
+    <div class="stat-card stat-card--green">
+      <div class="stat-value"
+           th:text="${#lists.size(mySkills.?[level.name() == 'EXPERT'])}">0</div>
+      <div class="stat-label">Expert</div>
+    </div>
+    <div class="stat-card stat-card--blue">
+      <div class="stat-value"
+           th:text="${#lists.size(mySkills.?[level.name() == 'READY'])}">0</div>
+      <div class="stat-label">Ready</div>
+    </div>
+    <div class="stat-card stat-card--amber">
+      <div class="stat-value"
+           th:text="${#lists.size(mySkills.?[level.name() == 'ASSOCIATE'])}">0</div>
+      <div class="stat-label">Associate</div>
+    </div>
+    <div class="stat-card stat-card--gray">
+      <div class="stat-value"
+           th:text="${#lists.size(mySkills.?[level.name() == 'GEPLANT'])}">0</div>
+      <div class="stat-label">Geplant</div>
+    </div>
+  </div>
+
+  <!-- Skill list -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Meine Skills</h3>
+      <a th:href="@{/engineer/skills}" class="btn btn--sm btn--outline">Bearbeiten →</a>
+    </div>
+    <div th:if="${mySkills.empty}" class="empty-state">
+      <p>Noch keine Skills erfasst.</p>
+      <a th:href="@{/engineer/skills}" class="btn btn--primary btn--sm">Jetzt hinzufügen</a>
+    </div>
+    <div th:unless="${mySkills.empty}" class="skill-list">
+      <div th:each="es : ${mySkills}" class="skill-row">
+        <div class="skill-row-left">
+          <span class="skill-cat-dot"
+                th:style="'background:' + (${es.skill.category} != null ? ${es.skill.category.color} : '#888')"></span>
+          <div>
+            <div class="skill-name" th:text="${es.skill.name}">Skill</div>
+            <div class="skill-cat-name" th:text="${es.skill.category?.name}">Kategorie</div>
+          </div>
+        </div>
+        <span class="level-badge"
+              th:classappend="'level-badge--' + ${es.level.name().toLowerCase()}"
+              th:text="${es.level.label}">Level</span>
+      </div>
+    </div>
+  </div>
+
+</th:block>
+</html>

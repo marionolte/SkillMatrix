@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout('Skill Matrix','Vollstaendige Skill-Uebersicht aller Engineers','matrix',~{::headExtra},~{::pageActions},~{::content},~{})}">
+<head><th:block th:fragment="headExtra"></th:block></head>
+<body>
+
+<th:block th:fragment="headExtra">
+<style>
+.matrix-page-scroll { overflow-x: auto; }
+.matrix-full { border-collapse: collapse; min-width: 100%; }
+.matrix-full th, .matrix-full td { border: 1px solid var(--border); padding: 0; }
+.mf-skill-col { min-width: 160px; max-width: 200px; }
+.mf-eng-col { min-width: 110px; text-align: center; }
+.mf-cat-row td { background: var(--surface-2); font-weight: 700; font-size: .75rem;
+  letter-spacing:.06em; color: var(--text-2); padding: .4rem .75rem; }
+.mf-skill-name { padding: .45rem .75rem; font-size: .85rem; background: var(--surface); }
+.mf-eng-header { padding: .5rem .4rem; font-size:.8rem; font-weight:600;
+  background: var(--surface-2); writing-mode: vertical-rl; text-orientation: mixed;
+  transform: rotate(180deg); height: 110px; vertical-align: bottom; }
+.mf-cell { padding: .3rem .25rem; text-align: center; }
+.legend { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1.25rem; align-items:center; }
+.legend-item { display:flex; align-items:center; gap:.35rem; font-size:.82rem; color:var(--text-2); }
+</style>
+</th:block>
+<th:block th:fragment="pageActions">
+  <a th:href="@{/manager/export/excel}" class="btn btn--outline">↓ Excel Export</a>
+  <a th:href="@{/manager/gaps}" class="btn btn--primary">Gap Analyse →</a>
+</th:block>
+
+<th:block th:fragment="content">
+
+  <!-- Legend -->
+  <div class="legend">
+    <span style="font-size:.8rem;font-weight:600;color:var(--text-2)">LEGENDE:</span>
+    <span class="legend-item"><span class="matrix-pill matrix-pill--expert">Expert</span> Vollständige Expertise</span>
+    <span class="legend-item"><span class="matrix-pill matrix-pill--ready">Ready</span> Produktiv einsetzbar</span>
+    <span class="legend-item"><span class="matrix-pill matrix-pill--associate">Associate</span> Grundkenntnisse</span>
+    <span class="legend-item"><span class="matrix-pill matrix-pill--geplant">Geplant</span> In Planung</span>
+    <span class="legend-item"><span class="matrix-empty" style="font-size:1rem">—</span> Nicht vorhanden</span>
+  </div>
+
+  <div class="card">
+    <div class="matrix-page-scroll">
+      <table class="matrix-full">
+        <thead>
+          <tr>
+            <th class="mf-skill-col" style="background:var(--surface-2);padding:.5rem .75rem;font-size:.8rem">
+              Skill / Engineer →
+            </th>
+            <th th:each="eng : ${engineers}" class="mf-eng-col">
+              <div class="mf-eng-header" th:text="${eng.fullName}">Name</div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <th:block th:each="cat : ${categories}">
+            <th:block th:with="catSkills=${skills.?[category != null and category.id == __${cat.id}__]}">
+              <tr th:if="${!catSkills.empty}" class="mf-cat-row">
+                <td th:colspan="${#lists.size(engineers) + 1}">
+                  <span th:text="${cat.icon}">🔧</span>
+                  <span th:text="${cat.name}">Kategorie</span>
+                </td>
+              </tr>
+              <tr th:each="skill : ${catSkills}">
+                <td class="mf-skill-name" th:text="${skill.name}">Skill</td>
+                <td th:each="eng : ${engineers}" class="mf-cell">
+                  <th:block th:with="key=${eng.id + '_' + skill.id}, lvl=${lookup[key]}">
+                    <span th:if="${lvl != null}" class="matrix-pill"
+                          th:classappend="'matrix-pill--' + ${lvl.name().toLowerCase()}"
+                          th:text="${lvl.label}">—</span>
+                    <span th:unless="${lvl != null}" class="matrix-empty">—</span>
+                  </th:block>
+                </td>
+              </tr>
+            </th:block>
+          </th:block>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</th:block>
+</html>

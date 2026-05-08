@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout :: layout(${engineer.fullName},'Skill-Profil','matrix',~{},~{::pageActions},~{::content},~{})}">
+<head><th:block th:fragment="headExtra"></th:block></head>
+<body>
+
+<th:block th:fragment="pageActions">
+  <a th:href="@{/manager/matrix}" class="btn btn--outline">← Matrix</a>
+</th:block>
+<th:block th:fragment="content">
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" th:text="${#lists.size(engineerSkills)}">0</div>
+      <div class="stat-label">Skills gesamt</div>
+    </div>
+    <div class="stat-card stat-card--green">
+      <div class="stat-value"
+           th:text="${#lists.size(engineerSkills.?[level.name() == 'EXPERT'])}">0</div>
+      <div class="stat-label">Expert</div>
+    </div>
+    <div class="stat-card stat-card--blue">
+      <div class="stat-value"
+           th:text="${#lists.size(engineerSkills.?[level.name() == 'READY'])}">0</div>
+      <div class="stat-label">Ready</div>
+    </div>
+    <div class="stat-card stat-card--amber">
+      <div class="stat-value"
+           th:text="${#lists.size(engineerSkills.?[level.name() == 'ASSOCIATE'])}">0</div>
+      <div class="stat-label">Associate</div>
+    </div>
+    <div class="stat-card stat-card--gray">
+      <div class="stat-value"
+           th:text="${#lists.size(engineerSkills.?[level.name() == 'GEPLANT'])}">0</div>
+      <div class="stat-label">Geplant</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div class="eng-avatar eng-avatar--lg"
+             th:text="${#strings.substring(engineer.fullName,0,1)}">M</div>
+        <div>
+          <div style="font-weight:700;font-size:1.1rem" th:text="${engineer.fullName}">Name</div>
+          <div style="color:var(--text-2);font-size:.85rem"
+               th:text="${(engineer.team ?: '') + (engineer.department != null ? ' · ' + engineer.department : '')}">Team</div>
+          <div style="color:var(--text-2);font-size:.85rem" th:text="${engineer.email}">Email</div>
+        </div>
+      </div>
+    </div>
+
+    <div th:if="${engineerSkills.empty}" class="empty-state">
+      <p>Dieser Engineer hat noch keine Skills erfasst.</p>
+    </div>
+
+    <div th:unless="${engineerSkills.empty}" class="skill-table-wrapper">
+      <table class="skill-table">
+        <thead>
+          <tr>
+            <th>Skill</th>
+            <th>Kategorie</th>
+            <th>Level</th>
+            <th>Notizen</th>
+            <th>Zuletzt geändert</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="es : ${engineerSkills}">
+            <td class="skill-name-cell" th:text="${es.skill.name}">Skill</td>
+            <td>
+              <span class="cat-chip"
+                    th:style="'background:' + (${es.skill.category} != null ? ${es.skill.category.color} + '22' : '#88888822') + ';color:' + (${es.skill.category} != null ? ${es.skill.category.color} : '#888')"
+                    th:text="${es.skill.category?.name ?: '—'}">Kat</span>
+            </td>
+            <td>
+              <span class="level-badge"
+                    th:classappend="'level-badge--' + ${es.level.name().toLowerCase()}"
+                    th:text="${es.level.label}">Level</span>
+            </td>
+            <td class="notes-cell" th:text="${es.notes ?: '—'}">—</td>
+            <td class="date-cell"
+                th:text="${#temporals.format(es.updatedAt, 'dd.MM.yy HH:mm')}">Datum</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</th:block>
+</html>
