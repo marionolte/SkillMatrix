@@ -29,13 +29,23 @@ public class EngineerExcelService {
     // ── Export ───────────────────────────────────────────────────
     public byte[] exportMySkills(Long engineerId) throws Exception {
         User engineer = userRepository.findById(engineerId).orElseThrow();
-        List<EngineerSkill>    mySkills    = engineerSkillRepository.findByEngineerIdWithDetails(engineerId);
+        List<Skill> allSkills = skillRepository.findAllActiveWithCategory();
+        List<EngineerSkill> mySkills = engineerSkillRepository.findByEngineerIdWithDetails(engineerId);
         List<EngineerSubSkill> mySubSkills = engineerSubSkillRepository.findByEngineerIdWithDetails(engineerId);
 
-        // Build subskill lookup: skillId → list of EngineerSubSkill
-        Map<Long, List<EngineerSubSkill>> subBySkill = new LinkedHashMap<>();
+        Map<Long, EngineerSkill> skillLookup = new HashMap<>();
+        for (EngineerSkill es : mySkills) {
+            skillLookup.put(es.getSkill().getId(), es);
+        }
+        Map<Long, EngineerSubSkill> subSkillLookup = new HashMap<>();
         for (EngineerSubSkill ess : mySubSkills) {
-            subBySkill.computeIfAbsent(ess.getSubSkill().getSkill().getId(), k -> new ArrayList<>()).add(ess);
+            subSkillLookup.put(ess.getSubSkill().getId(), ess);
+        }
+
+        Map<String, List<Skill>> byCategory = new LinkedHashMap<>();
+        for (Skill skill : allSkills) {
+            String cat = skill.getCategory() != null ? skill.getCategory().getName() : "Sonstiges";
+            byCategory.computeIfAbsent(cat, k -> new ArrayList<>()).add(skill);
         }
 
         try (XSSFWorkbook wb = new XSSFWorkbook()) {
@@ -48,6 +58,7 @@ public class EngineerExcelService {
             XSSFCellStyle readyStyle  = levelStyle(wb, new byte[]{(byte)37,(byte)99,(byte)235});
             XSSFCellStyle assocStyle  = levelStyle(wb, new byte[]{(byte)217,(byte)119,(byte)6});
             XSSFCellStyle geplantStyle= levelStyle(wb, new byte[]{(byte)100,(byte)116,(byte)139});
+            XSSFCellStyle unknownStyle = unknownStyle(wb);
             XSSFCellStyle subStyle    = subSkillRowStyle(wb);
             XSSFCellStyle normalStyle = normalStyle(wb);
 
@@ -83,14 +94,7 @@ public class EngineerExcelService {
                 c.setCellStyle(headerStyle);
             }
 
-            // Group by category
-            Map<String, List<EngineerSkill>> byCategory = new LinkedHashMap<>();
-            for (EngineerSkill es : mySkills) {
-                String cat = es.getSkill().getCategory() != null ? es.getSkill().getCategory().getName() : "Sonstiges";
-                byCategory.computeIfAbsent(cat, k -> new ArrayList<>()).add(es);
-            }
-
-            for (Map.Entry<String, List<EngineerSkill>> entry : byCategory.entrySet()) {
+            for (Map.Entry<String, List<Skill>> entry : byCategory.entrySet()) {
                 // Category separator row
                 Row catRow = sheet.createRow(row++);
                 catRow.setHeightInPoints(18);
@@ -99,45 +103,65 @@ public class EngineerExcelService {
                 cc.setCellStyle(catStyle);
                 sheet.addMergedRegion(new CellRangeAddress(catRow.getRowNum(), catRow.getRowNum(), 0, 6));
 
-                for (EngineerSkill es : entry.getValue()) {
+                for (Skill skill : entry.getValue()) {
+                    EngineerSkill es = skillLookup.get(skill.getId());
+
                     // Skill row
                     Row skillRow = sheet.createRow(row++);
                     skillRow.setHeightInPoints(18);
                     skillRow.createCell(0).setCellValue("Skill");
                     skillRow.getCell(0).setCellStyle(normalStyle);
                     Cell catCell = skillRow.createCell(1);
-                    catCell.setCellValue(es.getSkill().getCategory() != null ? es.getSkill().getCategory().getName() : "");
+                    catCell.setCellValue(skill.getCategory() != null ? skill.getCategory().getName() : "");
                     catCell.setCellStyle(normalStyle);
                     Cell nameCell = skillRow.createCell(2);
-                    nameCell.setCellValue(es.getSkill().getName());
+                    nameCell.setCellValue(skill.getName());
                     nameCell.setCellStyle(normalStyle);
-                    skillRow.createCell(3).setCellStyle(normalStyle); // no subskill
+                    skillRow.createCell(3).setCellStyle(normalStyle);
                     Cell lvlCell = skillRow.createCell(4);
-                    lvlCell.setCellValue(es.getLevel().getLabel());
-                    lvlCell.setCellStyle(levelCellStyle(wb, es.getLevel(),
-                        expertStyle, readyStyle, assocStyle, geplantStyle));
                     Cell notesCell = skillRow.createCell(5);
-                    notesCell.setCellValue(es.getNotes() != null ? es.getNotes() : "");
-                    notesCell.setCellStyle(normalStyle);
                     Cell updCell = skillRow.createCell(6);
-                    updCell.setCellValue(es.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm")));
+                    if (es != null) {
+                        lvlCell.setCellValue(es.getLevel().getLabel());
+                        lvlCell.setCellStyle(levelCellStyle(wb, es.getLevel(), expertStyle, readyStyle, assocStyle, geplantStyle));
+                        notesCell.setCellValue(es.getNotes() != null ? es.getNotes() : "");
+                        updCell.setCellValue(es.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm")));
+                    } else {
+                        lvlCell.setCellValue("UNKNOWN");
+                        lvlCell.setCellStyle(unknownStyle);
+                        notesCell.setCellValue("");
+                        updCell.setCellValue("");
+                    }
+                    notesCell.setCellStyle(normalStyle);
                     updCell.setCellStyle(normalStyle);
 
-                    // SubSkill rows (indented under skill)
-                    List<EngineerSubSkill> subs = subBySkill.getOrDefault(es.getSkill().getId(), List.of());
-                    for (EngineerSubSkill ess : subs) {
+                    // SubSkill rows
+                    for (SubSkill subSkill : skill.getSubSkills()) {
+                        if (!subSkill.isActive()) continue;
+                        EngineerSubSkill ess = subSkillLookup.get(subSkill.getId());
+
                         Row subRow = sheet.createRow(row++);
                         subRow.setHeightInPoints(16);
                         Cell st = subRow.createCell(0); st.setCellValue("SubSkill"); st.setCellStyle(subStyle);
                         Cell sc = subRow.createCell(1); sc.setCellValue(""); sc.setCellStyle(subStyle);
-                        Cell sn = subRow.createCell(2); sn.setCellValue("  └ " + es.getSkill().getName()); sn.setCellStyle(subStyle);
-                        Cell ss = subRow.createCell(3); ss.setCellValue(ess.getSubSkill().getName()); ss.setCellStyle(subStyle);
+                        Cell sn = subRow.createCell(2); sn.setCellValue("  └ " + skill.getName()); sn.setCellStyle(subStyle);
+                        Cell ss = subRow.createCell(3); ss.setCellValue(subSkill.getName()); ss.setCellStyle(subStyle);
                         Cell sl = subRow.createCell(4);
-                        sl.setCellValue(ess.getLevel().getLabel());
-                        sl.setCellStyle(levelCellStyle(wb, ess.getLevel(),
-                            expertStyle, readyStyle, assocStyle, geplantStyle));
-                        Cell sno = subRow.createCell(5); sno.setCellValue(ess.getNotes() != null ? ess.getNotes() : ""); sno.setCellStyle(subStyle);
-                        Cell sud = subRow.createCell(6); sud.setCellValue(ess.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm"))); sud.setCellStyle(subStyle);
+                        Cell sno = subRow.createCell(5);
+                        Cell sud = subRow.createCell(6);
+                        if (ess != null) {
+                            sl.setCellValue(ess.getLevel().getLabel());
+                            sl.setCellStyle(levelCellStyle(wb, ess.getLevel(), expertStyle, readyStyle, assocStyle, geplantStyle));
+                            sno.setCellValue(ess.getNotes() != null ? ess.getNotes() : "");
+                            sud.setCellValue(ess.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm")));
+                        } else {
+                            sl.setCellValue("UNKNOWN");
+                            sl.setCellStyle(unknownStyle);
+                            sno.setCellValue("");
+                            sud.setCellValue("");
+                        }
+                        sno.setCellStyle(subStyle);
+                        sud.setCellStyle(subStyle);
                     }
                 }
                 row++; // spacer between categories
@@ -161,22 +185,24 @@ public class EngineerExcelService {
             imp.setColumnWidth(4, 3800);
 
             int ir = 1;
-            for (EngineerSkill es : mySkills) {
+            for (Skill skill : allSkills) {
+                EngineerSkill es = skillLookup.get(skill.getId());
                 Row r = imp.createRow(ir++);
-                r.createCell(0).setCellValue(es.getSkill().getCategory() != null ? es.getSkill().getCategory().getName() : "");
-                r.createCell(1).setCellValue(es.getSkill().getName());
+                r.createCell(0).setCellValue(skill.getCategory() != null ? skill.getCategory().getName() : "");
+                r.createCell(1).setCellValue(skill.getName());
                 r.createCell(2).setCellValue("");
-                r.createCell(3).setCellValue(es.getSkill().getDescription() != null ? es.getSkill().getDescription() : "");
-                r.createCell(4).setCellValue(es.getLevel().name());
+                r.createCell(3).setCellValue(skill.getDescription() != null ? skill.getDescription() : "");
+                r.createCell(4).setCellValue(es != null ? es.getLevel().name() : "UNKNOWN");
 
-                List<EngineerSubSkill> subs = subBySkill.getOrDefault(es.getSkill().getId(), List.of());
-                for (EngineerSubSkill ess : subs) {
+                for (SubSkill subSkill : skill.getSubSkills()) {
+                    if (!subSkill.isActive()) continue;
+                    EngineerSubSkill ess = subSkillLookup.get(subSkill.getId());
                     Row sr = imp.createRow(ir++);
-                    sr.createCell(0).setCellValue(es.getSkill().getCategory() != null ? es.getSkill().getCategory().getName() : "");
-                    sr.createCell(1).setCellValue(es.getSkill().getName());
-                    sr.createCell(2).setCellValue(ess.getSubSkill().getName());
+                    sr.createCell(0).setCellValue(skill.getCategory() != null ? skill.getCategory().getName() : "");
+                    sr.createCell(1).setCellValue(skill.getName());
+                    sr.createCell(2).setCellValue(subSkill.getName());
                     sr.createCell(3).setCellValue("");
-                    sr.createCell(4).setCellValue(ess.getLevel().name());
+                    sr.createCell(4).setCellValue(ess != null ? ess.getLevel().name() : "UNKNOWN");
                 }
             }
 
@@ -230,7 +256,7 @@ public class EngineerExcelService {
                 String subName  = str(row.getCell(2)).trim();
                 String levelStr = str(row.getCell(ownCol)).trim().toUpperCase();
 
-                if (levelStr.isBlank() || levelStr.equals("-") || levelStr.equals("—")) continue;
+                if (levelStr.isBlank() || levelStr.equals("-") || levelStr.equals("—") || levelStr.equals("UNKNOWN")) continue;
 
                 EngineerSkill.SkillLevel level;
                 try {
@@ -333,6 +359,19 @@ public class EngineerExcelService {
         XSSFFont f = wb.createFont();
         f.setColor(new XSSFColor(new byte[]{(byte)255,(byte)255,(byte)255}, null));
         f.setBold(true); f.setFontHeightInPoints((short)9);
+        s.setFont(f);
+        s.setAlignment(HorizontalAlignment.CENTER);
+        s.setBorderBottom(BorderStyle.THIN);
+        return s;
+    }
+
+    private XSSFCellStyle unknownStyle(XSSFWorkbook wb) {
+        XSSFCellStyle s = wb.createCellStyle();
+        s.setFillForegroundColor(new XSSFColor(new byte[]{(byte)203,(byte)213,(byte)225}, null));
+        s.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        XSSFFont f = wb.createFont();
+        f.setColor(new XSSFColor(new byte[]{(byte)100,(byte)116,(byte)139}, null));
+        f.setFontHeightInPoints((short)9);
         s.setFont(f);
         s.setAlignment(HorizontalAlignment.CENTER);
         s.setBorderBottom(BorderStyle.THIN);
