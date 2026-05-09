@@ -4,6 +4,7 @@ import com.macmario.services.oksm.model.*;
 import com.macmario.services.oksm.repository.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -204,6 +205,20 @@ public class EngineerExcelService {
                     sr.createCell(3).setCellValue("");
                     sr.createCell(4).setCellValue(ess != null ? ess.getLevel().name() : "UNKNOWN");
                 }
+            }
+
+            // Dropdown for level column on Import sheet
+            if (ir > 1) {
+                DataValidationHelper dvHelper = imp.getDataValidationHelper();
+                DataValidationConstraint dvConstraint = dvHelper.createExplicitListConstraint(
+                    new String[]{"EXPERT", "READY", "ASSOCIATE", "GEPLANT", "UNKNOWN"});
+                DataValidation dv = dvHelper.createValidation(
+                    dvConstraint, new CellRangeAddressList(1, ir - 1, 4, 4));
+                dv.setSuppressDropDownArrow(false);
+                dv.setShowErrorBox(true);
+                dv.setErrorStyle(DataValidation.ErrorStyle.STOP);
+                dv.createErrorBox("Ungültiger Wert", "Bitte einen Wert aus der Liste wählen.");
+                imp.addValidationData(dv);
             }
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
