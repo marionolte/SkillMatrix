@@ -44,10 +44,12 @@ public class ExcelExportService {
             // Styles
             CellStyle headerStyle = createHeaderStyle(workbook, new byte[]{(byte)30, (byte)41, (byte)59});
             CellStyle categoryStyle = createHeaderStyle(workbook, new byte[]{(byte)51, (byte)65, (byte)85});
-            CellStyle expertStyle = createLevelStyle(workbook, new byte[]{(byte)16, (byte)185, (byte)129});
-            CellStyle readyStyle = createLevelStyle(workbook, new byte[]{(byte)59, (byte)130, (byte)246});
-            CellStyle associateStyle = createLevelStyle(workbook, new byte[]{(byte)245, (byte)158, (byte)11});
-            CellStyle geplantStyle = createLevelStyle(workbook, new byte[]{(byte)107, (byte)114, (byte)128});
+            CellStyle spezialistStyle     = createLevelStyle(workbook, new byte[]{(byte)124, (byte)58,  (byte)237});
+            CellStyle experteStyle        = createLevelStyle(workbook, new byte[]{(byte)5,   (byte)150, (byte)105});
+            CellStyle fortgeschrittenStyle= createLevelStyle(workbook, new byte[]{(byte)37,  (byte)99,  (byte)235});
+            CellStyle anwenderStyle       = createLevelStyle(workbook, new byte[]{(byte)217, (byte)119, (byte)6});
+            CellStyle grundwissenStyle    = createLevelStyle(workbook, new byte[]{(byte)234, (byte)88,  (byte)12});
+            CellStyle nopStyle            = createLevelStyle(workbook, new byte[]{(byte)107, (byte)114, (byte)128});
             CellStyle emptyStyle = createEmptyStyle(workbook);
             CellStyle engineerStyle = createEngineerStyle(workbook);
             CellStyle titleStyle = createTitleStyle(workbook);
@@ -109,10 +111,12 @@ public class ExcelExportService {
                         if (level != null) {
                             levelCell.setCellValue(level.getLabel());
                             levelCell.setCellStyle(switch (level) {
-                                case EXPERT -> expertStyle;
-                                case READY -> readyStyle;
-                                case ASSOCIATE -> associateStyle;
-                                case GEPLANT -> geplantStyle;
+                                case SPEZIALIST      -> spezialistStyle;
+                                case EXPERTE         -> experteStyle;
+                                case FORTGESCHRITTEN -> fortgeschrittenStyle;
+                                case ANWENDER        -> anwenderStyle;
+                                case GRUNDWISSEN     -> grundwissenStyle;
+                                case NOP             -> nopStyle;
                             });
                         } else {
                             levelCell.setCellValue("—");
@@ -133,12 +137,12 @@ public class ExcelExportService {
             Cell sumTitleCell = sumTitle.createCell(0);
             sumTitleCell.setCellValue("Skill-Zusammenfassung pro Engineer");
             sumTitleCell.setCellStyle(titleStyle);
-            summarySheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5));
+            summarySheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
 
             sumRow++;
             Row sumHeader = summarySheet.createRow(sumRow++);
             sumHeader.setHeightInPoints(24);
-            String[] headers = {"Engineer", "Team", "Expert", "Ready", "Associate", "Geplant", "Gesamt"};
+            String[] headers = {"Engineer", "Team", "Spezialist", "Experte", "Fortgeschritten", "Anwender", "Grundwissen", "NOP", "Gesamt"};
             for (int i = 0; i < headers.length; i++) {
                 Cell c = sumHeader.createCell(i);
                 c.setCellValue(headers[i]);
@@ -147,24 +151,28 @@ public class ExcelExportService {
 
             for (User engineer : engineers) {
                 List<EngineerSkill> engSkills = engineerSkillRepository.findByEngineerId(engineer.getId());
-                int expert = 0, ready = 0, associate = 0, geplant = 0;
+                int spezialist = 0, experte = 0, fortgeschritten = 0, anwender = 0, grundwissen = 0, nop = 0;
                 for (EngineerSkill es : engSkills) {
                     switch (es.getLevel()) {
-                        case EXPERT -> expert++;
-                        case READY -> ready++;
-                        case ASSOCIATE -> associate++;
-                        case GEPLANT -> geplant++;
+                        case SPEZIALIST      -> spezialist++;
+                        case EXPERTE         -> experte++;
+                        case FORTGESCHRITTEN -> fortgeschritten++;
+                        case ANWENDER        -> anwender++;
+                        case GRUNDWISSEN     -> grundwissen++;
+                        case NOP             -> nop++;
                     }
                 }
                 Row sumDataRow = summarySheet.createRow(sumRow++);
                 sumDataRow.setHeightInPoints(18);
                 sumDataRow.createCell(0).setCellValue(engineer.getFullName());
                 sumDataRow.createCell(1).setCellValue(engineer.getTeam() != null ? engineer.getTeam() : "—");
-                Cell eCell = sumDataRow.createCell(2); eCell.setCellValue(expert); eCell.setCellStyle(expertStyle);
-                Cell rCell = sumDataRow.createCell(3); rCell.setCellValue(ready); rCell.setCellStyle(readyStyle);
-                Cell aCell = sumDataRow.createCell(4); aCell.setCellValue(associate); aCell.setCellStyle(associateStyle);
-                Cell gCell = sumDataRow.createCell(5); gCell.setCellValue(geplant); gCell.setCellStyle(geplantStyle);
-                sumDataRow.createCell(6).setCellValue(engSkills.size());
+                Cell c2 = sumDataRow.createCell(2); c2.setCellValue(spezialist);     c2.setCellStyle(spezialistStyle);
+                Cell c3 = sumDataRow.createCell(3); c3.setCellValue(experte);        c3.setCellStyle(experteStyle);
+                Cell c4 = sumDataRow.createCell(4); c4.setCellValue(fortgeschritten);c4.setCellStyle(fortgeschrittenStyle);
+                Cell c5 = sumDataRow.createCell(5); c5.setCellValue(anwender);       c5.setCellStyle(anwenderStyle);
+                Cell c6 = sumDataRow.createCell(6); c6.setCellValue(grundwissen);    c6.setCellStyle(grundwissenStyle);
+                Cell c7 = sumDataRow.createCell(7); c7.setCellValue(nop);            c7.setCellStyle(nopStyle);
+                sumDataRow.createCell(8).setCellValue(engSkills.size());
             }
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();

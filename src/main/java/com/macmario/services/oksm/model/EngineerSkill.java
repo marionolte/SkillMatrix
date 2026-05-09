@@ -48,10 +48,12 @@ public class EngineerSkill {
     }
 
     public enum SkillLevel {
-        EXPERT("Expert", "#10B981", "⭐⭐⭐⭐", 4),
-        READY("Ready", "#3B82F6", "⭐⭐⭐", 3),
-        ASSOCIATE("Associate", "#F59E0B", "⭐⭐", 2),
-        GEPLANT("Geplant", "#6B7280", "⭐", 1);
+        SPEZIALIST("Spezialist",       "#7C3AED", "⭐⭐⭐⭐⭐⭐", 6),
+        EXPERTE("Experte",             "#059669", "⭐⭐⭐⭐⭐",  5),
+        FORTGESCHRITTEN("Fortgeschritten", "#2563EB", "⭐⭐⭐⭐",  4),
+        ANWENDER("Anwender",           "#D97706", "⭐⭐⭐",     3),
+        GRUNDWISSEN("Grundwissen",     "#EA580C", "⭐⭐",      2),
+        NOP("NOP",                     "#6B7280", "⭐",        1);
 
         private final String label;
         private final String color;

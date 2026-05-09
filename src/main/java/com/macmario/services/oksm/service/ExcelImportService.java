@@ -23,7 +23,7 @@ import java.util.*;
  * If SubSkill is empty, the row sets the top-level EngineerSkill level.
  * If SubSkill has a value, the row sets the EngineerSubSkill level.
  *
- * Level values accepted (case-insensitive): EXPERT, READY, ASSOCIATE, GEPLANT (or blank = skip)
+ * Level values accepted (case-insensitive): SPEZIALIST, EXPERTE, FORTGESCHRITTEN, ANWENDER, GRUNDWISSEN, NOP (or blank = skip)
  */
 @Service
 @Transactional
@@ -203,11 +203,11 @@ public class ExcelImportService {
 
             // Example rows
             String[][] examples = {
-                {"Backend", "Java", "",          "Java 17+",          "EXPERT", "READY",  "ASSOCIATE", ""},
-                {"Backend", "Java", "Install",   "Java Installation", "EXPERT", "READY",  "",          "GEPLANT"},
-                {"Backend", "Java", "Upgrade",   "Java Upgrades",     "READY",  "",       "ASSOCIATE", ""},
-                {"DevOps",  "Docker", "",        "Container",         "",       "EXPERT", "READY",     "ASSOCIATE"},
-                {"DevOps",  "Docker", "Install", "Docker setup",      "",       "EXPERT", "READY",     ""},
+                {"Backend", "Java", "",          "Java 17+",          "SPEZIALIST",  "EXPERTE",       "ANWENDER",   ""},
+                {"Backend", "Java", "Install",   "Java Installation", "SPEZIALIST",  "EXPERTE",       "",           "GRUNDWISSEN"},
+                {"Backend", "Java", "Upgrade",   "Java Upgrades",     "EXPERTE",     "",              "ANWENDER",   ""},
+                {"DevOps",  "Docker", "",        "Container",         "",            "SPEZIALIST",    "EXPERTE",    "FORTGESCHRITTEN"},
+                {"DevOps",  "Docker", "Install", "Docker setup",      "",            "SPEZIALIST",    "EXPERTE",    ""},
             };
 
             int r = 1;
@@ -234,11 +234,13 @@ public class ExcelImportService {
                 "Spalten E+: Benutzername des Engineers als Überschrift, Level als Wert",
                 "",
                 "Gültige Level-Werte:",
-                "  EXPERT    - vollständige Expertise",
-                "  READY     - produktiv einsetzbar",
-                "  ASSOCIATE - Grundkenntnisse",
-                "  GEPLANT   - geplante Weiterbildung",
-                "  (leer)    - kein Eintrag / überspringen",
+                "  SPEZIALIST      - Tiefste Expertise, Technologieführerschaft",
+                "  EXPERTE         - Vollständige Expertise, produktiv einsetzbar",
+                "  FORTGESCHRITTEN - Solide Kenntnisse, weitgehend selbstständig",
+                "  ANWENDER        - Grundkenntnisse, mit Unterstützung einsetzbar",
+                "  GRUNDWISSEN     - Erste Berührungspunkte / Basiswissen",
+                "  NOP             - Kein Profil / nicht relevant",
+                "  (leer)          - kein Eintrag / überspringen",
             };
             for (int i = 0; i < lines.length; i++) {
                 var row = info.createRow(i);

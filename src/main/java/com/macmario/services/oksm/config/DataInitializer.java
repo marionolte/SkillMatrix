@@ -120,62 +120,62 @@ public class DataInitializer implements CommandLineRunner {
         SubSkill sqlMigrate  = subSkillRepo.save(new SubSkill(sql, "Migrate",     "Schema/data migration",2));
 
         // ── Engineer Skills ─────────────────────────────────────
-        es(eng1, java,   EngineerSkill.SkillLevel.EXPERT);
-        es(eng1, spring, EngineerSkill.SkillLevel.EXPERT);
-        es(eng1, sql,    EngineerSkill.SkillLevel.READY);
-        es(eng1, docker, EngineerSkill.SkillLevel.READY);
-        es(eng1, python, EngineerSkill.SkillLevel.ASSOCIATE);
-        es(eng1, kafka,  EngineerSkill.SkillLevel.GEPLANT);
-        es(eng1, owasp,  EngineerSkill.SkillLevel.ASSOCIATE);
+        es(eng1, java,   EngineerSkill.SkillLevel.SPEZIALIST);
+        es(eng1, spring, EngineerSkill.SkillLevel.SPEZIALIST);
+        es(eng1, sql,    EngineerSkill.SkillLevel.EXPERTE);
+        es(eng1, docker, EngineerSkill.SkillLevel.EXPERTE);
+        es(eng1, python, EngineerSkill.SkillLevel.ANWENDER);
+        es(eng1, kafka,  EngineerSkill.SkillLevel.GRUNDWISSEN);
+        es(eng1, owasp,  EngineerSkill.SkillLevel.ANWENDER);
 
-        es(eng2, react,   EngineerSkill.SkillLevel.EXPERT);
-        es(eng2, ts,      EngineerSkill.SkillLevel.EXPERT);
-        es(eng2, css,     EngineerSkill.SkillLevel.EXPERT);
-        es(eng2, angular, EngineerSkill.SkillLevel.READY);
-        es(eng2, node,    EngineerSkill.SkillLevel.READY);
-        es(eng2, java,    EngineerSkill.SkillLevel.ASSOCIATE);
+        es(eng2, react,   EngineerSkill.SkillLevel.SPEZIALIST);
+        es(eng2, ts,      EngineerSkill.SkillLevel.SPEZIALIST);
+        es(eng2, css,     EngineerSkill.SkillLevel.SPEZIALIST);
+        es(eng2, angular, EngineerSkill.SkillLevel.EXPERTE);
+        es(eng2, node,    EngineerSkill.SkillLevel.EXPERTE);
+        es(eng2, java,    EngineerSkill.SkillLevel.ANWENDER);
 
-        es(eng3, java,   EngineerSkill.SkillLevel.READY);
-        es(eng3, spring, EngineerSkill.SkillLevel.ASSOCIATE);
-        es(eng3, react,  EngineerSkill.SkillLevel.READY);
-        es(eng3, ts,     EngineerSkill.SkillLevel.READY);
-        es(eng3, sql,    EngineerSkill.SkillLevel.EXPERT);
-        es(eng3, docker, EngineerSkill.SkillLevel.ASSOCIATE);
-        es(eng3, oauth,  EngineerSkill.SkillLevel.GEPLANT);
+        es(eng3, java,   EngineerSkill.SkillLevel.EXPERTE);
+        es(eng3, spring, EngineerSkill.SkillLevel.ANWENDER);
+        es(eng3, react,  EngineerSkill.SkillLevel.EXPERTE);
+        es(eng3, ts,     EngineerSkill.SkillLevel.EXPERTE);
+        es(eng3, sql,    EngineerSkill.SkillLevel.SPEZIALIST);
+        es(eng3, docker, EngineerSkill.SkillLevel.ANWENDER);
+        es(eng3, oauth,  EngineerSkill.SkillLevel.GRUNDWISSEN);
 
-        es(eng4, docker, EngineerSkill.SkillLevel.EXPERT);
-        es(eng4, k8s,    EngineerSkill.SkillLevel.EXPERT);
-        es(eng4, cicd,   EngineerSkill.SkillLevel.EXPERT);
-        es(eng4, aws,    EngineerSkill.SkillLevel.READY);
-        es(eng4, python, EngineerSkill.SkillLevel.READY);
-        es(eng4, kafka,  EngineerSkill.SkillLevel.ASSOCIATE);
-        es(eng4, owasp,  EngineerSkill.SkillLevel.READY);
+        es(eng4, docker, EngineerSkill.SkillLevel.SPEZIALIST);
+        es(eng4, k8s,    EngineerSkill.SkillLevel.SPEZIALIST);
+        es(eng4, cicd,   EngineerSkill.SkillLevel.SPEZIALIST);
+        es(eng4, aws,    EngineerSkill.SkillLevel.EXPERTE);
+        es(eng4, python, EngineerSkill.SkillLevel.EXPERTE);
+        es(eng4, kafka,  EngineerSkill.SkillLevel.ANWENDER);
+        es(eng4, owasp,  EngineerSkill.SkillLevel.EXPERTE);
 
-        es(consultant1, java,   EngineerSkill.SkillLevel.EXPERT);
-        es(consultant1, spring, EngineerSkill.SkillLevel.READY);
-        es(consultant1, aws,    EngineerSkill.SkillLevel.EXPERT);
-        es(consultant1, docker, EngineerSkill.SkillLevel.READY);
+        es(consultant1, java,   EngineerSkill.SkillLevel.SPEZIALIST);
+        es(consultant1, spring, EngineerSkill.SkillLevel.EXPERTE);
+        es(consultant1, aws,    EngineerSkill.SkillLevel.SPEZIALIST);
+        es(consultant1, docker, EngineerSkill.SkillLevel.EXPERTE);
 
         // ── Engineer SubSkills ──────────────────────────────────
-        ess(eng4, dkrInstall,  EngineerSkill.SkillLevel.EXPERT);
-        ess(eng4, dkrAdmin,    EngineerSkill.SkillLevel.EXPERT);
-        ess(eng4, dkrMigrate,  EngineerSkill.SkillLevel.READY);
-        ess(eng4, dkrUpgrade,  EngineerSkill.SkillLevel.READY);
-        ess(eng4, k8sInstall,  EngineerSkill.SkillLevel.EXPERT);
-        ess(eng4, k8sAdmin,    EngineerSkill.SkillLevel.EXPERT);
-        ess(eng4, k8sMigrate,  EngineerSkill.SkillLevel.ASSOCIATE);
-        ess(eng4, k8sUpgrade,  EngineerSkill.SkillLevel.READY);
+        ess(eng4, dkrInstall,  EngineerSkill.SkillLevel.SPEZIALIST);
+        ess(eng4, dkrAdmin,    EngineerSkill.SkillLevel.SPEZIALIST);
+        ess(eng4, dkrMigrate,  EngineerSkill.SkillLevel.EXPERTE);
+        ess(eng4, dkrUpgrade,  EngineerSkill.SkillLevel.EXPERTE);
+        ess(eng4, k8sInstall,  EngineerSkill.SkillLevel.SPEZIALIST);
+        ess(eng4, k8sAdmin,    EngineerSkill.SkillLevel.SPEZIALIST);
+        ess(eng4, k8sMigrate,  EngineerSkill.SkillLevel.ANWENDER);
+        ess(eng4, k8sUpgrade,  EngineerSkill.SkillLevel.EXPERTE);
 
-        ess(eng3, dkrInstall,  EngineerSkill.SkillLevel.READY);
-        ess(eng3, dkrAdmin,    EngineerSkill.SkillLevel.ASSOCIATE);
-        ess(eng1, javaInstall, EngineerSkill.SkillLevel.EXPERT);
-        ess(eng1, javaUpgrade, EngineerSkill.SkillLevel.READY);
-        ess(eng1, javaBuild,   EngineerSkill.SkillLevel.EXPERT);
-        ess(eng1, sqlInstall,  EngineerSkill.SkillLevel.READY);
-        ess(eng1, sqlAdmin,    EngineerSkill.SkillLevel.READY);
-        ess(eng1, sqlMigrate,  EngineerSkill.SkillLevel.ASSOCIATE);
-        ess(eng3, sqlAdmin,    EngineerSkill.SkillLevel.EXPERT);
-        ess(eng3, sqlMigrate,  EngineerSkill.SkillLevel.READY);
+        ess(eng3, dkrInstall,  EngineerSkill.SkillLevel.EXPERTE);
+        ess(eng3, dkrAdmin,    EngineerSkill.SkillLevel.ANWENDER);
+        ess(eng1, javaInstall, EngineerSkill.SkillLevel.SPEZIALIST);
+        ess(eng1, javaUpgrade, EngineerSkill.SkillLevel.EXPERTE);
+        ess(eng1, javaBuild,   EngineerSkill.SkillLevel.SPEZIALIST);
+        ess(eng1, sqlInstall,  EngineerSkill.SkillLevel.EXPERTE);
+        ess(eng1, sqlAdmin,    EngineerSkill.SkillLevel.EXPERTE);
+        ess(eng1, sqlMigrate,  EngineerSkill.SkillLevel.ANWENDER);
+        ess(eng3, sqlAdmin,    EngineerSkill.SkillLevel.SPEZIALIST);
+        ess(eng3, sqlMigrate,  EngineerSkill.SkillLevel.EXPERTE);
 
         // ── Service Teams ───────────────────────────────────────
         ServiceTeam teamPlatform = new ServiceTeam("Platform Team",   "Core platform services",      "#4F46E5");

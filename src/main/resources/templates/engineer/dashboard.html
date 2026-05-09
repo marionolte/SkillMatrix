@@ -16,23 +16,33 @@
     </div>
     <div class="stat-card stat-card--green">
       <div class="stat-value"
-           th:text="${#lists.size(mySkills.?[level.name() == 'EXPERT'])}">0</div>
-      <div class="stat-label">Expert</div>
+           th:text="${#lists.size(mySkills.?[level.name() == 'SPEZIALIST'])}">0</div>
+      <div class="stat-label">Spezialist</div>
+    </div>
+    <div class="stat-card stat-card--green">
+      <div class="stat-value"
+           th:text="${#lists.size(mySkills.?[level.name() == 'EXPERTE'])}">0</div>
+      <div class="stat-label">Experte</div>
     </div>
     <div class="stat-card stat-card--blue">
       <div class="stat-value"
-           th:text="${#lists.size(mySkills.?[level.name() == 'READY'])}">0</div>
-      <div class="stat-label">Ready</div>
+           th:text="${#lists.size(mySkills.?[level.name() == 'FORTGESCHRITTEN'])}">0</div>
+      <div class="stat-label">Fortgeschritten</div>
     </div>
     <div class="stat-card stat-card--amber">
       <div class="stat-value"
-           th:text="${#lists.size(mySkills.?[level.name() == 'ASSOCIATE'])}">0</div>
-      <div class="stat-label">Associate</div>
+           th:text="${#lists.size(mySkills.?[level.name() == 'ANWENDER'])}">0</div>
+      <div class="stat-label">Anwender</div>
+    </div>
+    <div class="stat-card stat-card--amber">
+      <div class="stat-value"
+           th:text="${#lists.size(mySkills.?[level.name() == 'GRUNDWISSEN'])}">0</div>
+      <div class="stat-label">Grundwissen</div>
     </div>
     <div class="stat-card stat-card--gray">
       <div class="stat-value"
-           th:text="${#lists.size(mySkills.?[level.name() == 'GEPLANT'])}">0</div>
-      <div class="stat-label">Geplant</div>
+           th:text="${#lists.size(mySkills.?[level.name() == 'NOP'])}">0</div>
+      <div class="stat-label">NOP</div>
     </div>
   </div>
 

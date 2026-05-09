@@ -55,10 +55,12 @@ public class EngineerExcelService {
             XSSFCellStyle titleStyle = titleStyle(wb);
             XSSFCellStyle headerStyle = headerStyle(wb);
             XSSFCellStyle catStyle = catStyle(wb);
-            XSSFCellStyle expertStyle = levelStyle(wb, new byte[]{(byte)22,(byte)134,(byte)58});
-            XSSFCellStyle readyStyle  = levelStyle(wb, new byte[]{(byte)37,(byte)99,(byte)235});
-            XSSFCellStyle assocStyle  = levelStyle(wb, new byte[]{(byte)217,(byte)119,(byte)6});
-            XSSFCellStyle geplantStyle= levelStyle(wb, new byte[]{(byte)100,(byte)116,(byte)139});
+            XSSFCellStyle spezialistStyle     = levelStyle(wb, new byte[]{(byte)124,(byte)58,(byte)237});
+            XSSFCellStyle experteStyle        = levelStyle(wb, new byte[]{(byte)5,(byte)150,(byte)105});
+            XSSFCellStyle fortgeschrittenStyle= levelStyle(wb, new byte[]{(byte)37,(byte)99,(byte)235});
+            XSSFCellStyle anwenderStyle       = levelStyle(wb, new byte[]{(byte)217,(byte)119,(byte)6});
+            XSSFCellStyle grundwissenStyle    = levelStyle(wb, new byte[]{(byte)234,(byte)88,(byte)12});
+            XSSFCellStyle nopStyle            = levelStyle(wb, new byte[]{(byte)107,(byte)114,(byte)128});
             XSSFCellStyle unknownStyle = unknownStyle(wb);
             XSSFCellStyle subStyle    = subSkillRowStyle(wb);
             XSSFCellStyle normalStyle = normalStyle(wb);
@@ -124,7 +126,7 @@ public class EngineerExcelService {
                     Cell updCell = skillRow.createCell(6);
                     if (es != null) {
                         lvlCell.setCellValue(es.getLevel().getLabel());
-                        lvlCell.setCellStyle(levelCellStyle(wb, es.getLevel(), expertStyle, readyStyle, assocStyle, geplantStyle));
+                        lvlCell.setCellStyle(levelCellStyle(wb, es.getLevel(), spezialistStyle, experteStyle, fortgeschrittenStyle, anwenderStyle, grundwissenStyle, nopStyle));
                         notesCell.setCellValue(es.getNotes() != null ? es.getNotes() : "");
                         updCell.setCellValue(es.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm")));
                     } else {
@@ -152,7 +154,7 @@ public class EngineerExcelService {
                         Cell sud = subRow.createCell(6);
                         if (ess != null) {
                             sl.setCellValue(ess.getLevel().getLabel());
-                            sl.setCellStyle(levelCellStyle(wb, ess.getLevel(), expertStyle, readyStyle, assocStyle, geplantStyle));
+                            sl.setCellStyle(levelCellStyle(wb, ess.getLevel(), spezialistStyle, experteStyle, fortgeschrittenStyle, anwenderStyle, grundwissenStyle, nopStyle));
                             sno.setCellValue(ess.getNotes() != null ? ess.getNotes() : "");
                             sud.setCellValue(ess.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm")));
                         } else {
@@ -211,7 +213,7 @@ public class EngineerExcelService {
             if (ir > 1) {
                 DataValidationHelper dvHelper = imp.getDataValidationHelper();
                 DataValidationConstraint dvConstraint = dvHelper.createExplicitListConstraint(
-                    new String[]{"EXPERT", "READY", "ASSOCIATE", "GEPLANT", "UNKNOWN"});
+                    new String[]{"SPEZIALIST", "EXPERTE", "FORTGESCHRITTEN", "ANWENDER", "GRUNDWISSEN", "NOP", "UNKNOWN"});
                 DataValidation dv = dvHelper.createValidation(
                     dvConstraint, new CellRangeAddressList(1, ir - 1, 4, 4));
                 dv.setSuppressDropDownArrow(false);
@@ -413,13 +415,16 @@ public class EngineerExcelService {
     }
 
     private XSSFCellStyle levelCellStyle(XSSFWorkbook wb, EngineerSkill.SkillLevel level,
-                                          XSSFCellStyle expert, XSSFCellStyle ready,
-                                          XSSFCellStyle assoc, XSSFCellStyle geplant) {
+                                          XSSFCellStyle spezialist, XSSFCellStyle experte,
+                                          XSSFCellStyle fortgeschritten, XSSFCellStyle anwender,
+                                          XSSFCellStyle grundwissen, XSSFCellStyle nop) {
         return switch (level) {
-            case EXPERT    -> expert;
-            case READY     -> ready;
-            case ASSOCIATE -> assoc;
-            case GEPLANT   -> geplant;
+            case SPEZIALIST      -> spezialist;
+            case EXPERTE         -> experte;
+            case FORTGESCHRITTEN -> fortgeschritten;
+            case ANWENDER        -> anwender;
+            case GRUNDWISSEN     -> grundwissen;
+            case NOP             -> nop;
         };
     }
 

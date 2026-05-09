@@ -37,7 +37,7 @@ public class ManagerController {
 
     @GetMapping("/gaps")
     public String gapAnalysis(@RequestParam(required = false) List<Long> skillIds,
-                              @RequestParam(required = false, defaultValue = "READY") String minLevel,
+                              @RequestParam(required = false, defaultValue = "EXPERTE") String minLevel,
                               Model model) {
         var allSkills = skillService.getAllActiveSkills();
         var categories = skillService.getAllCategories();
